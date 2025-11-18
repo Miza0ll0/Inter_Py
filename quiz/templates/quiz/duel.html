@@ -1,0 +1,116 @@
+{% extends 'quiz/base.html' %}
+
+{% block content %}
+  <section class="panel">
+    {% if finished %}
+      <h2>🎉 Duel terminé!</h2>
+      <div class="scores" style="margin: 32px 0;">
+        <div class="score-item">
+          <p style="font-size: 16px; margin: 0;">{{ players.p1 }}</p>
+          <strong style="font-size: 32px;">{{ result.p1 }}/{{ result.total }}</strong>
+          <div style="color: var(--muted); margin-top: 8px;">{{ result.p1_pct }}%</div>
+        </div>
+        <div style="text-align: center; align-self: center;">
+          {% if result.p1 > result.p2 %}
+            <div style="font-size: 24px; color: var(--success);">🏆</div>
+            <p style="margin: 4px 0; color: var(--success);">{{ players.p1 }} gagne!</p>
+          {% elif result.p2 > result.p1 %}
+            <div style="font-size: 24px; color: var(--success);">🏆</div>
+            <p style="margin: 4px 0; color: var(--success);">{{ players.p2 }} gagne!</p>
+          {% else %}
+            <p style="margin: 0; color: var(--muted);">Égalité!</p>
+          {% endif %}
+        </div>
+        <div class="score-item">
+          <p style="font-size: 16px; margin: 0;">{{ players.p2 }}</p>
+          <strong style="font-size: 32px;">{{ result.p2 }}/{{ result.total }}</strong>
+          <div style="color: var(--muted); margin-top: 8px;">{{ result.p2_pct }}%</div>
+        </div>
+      </div>
+      <div style="text-align: center;">
+        <a href="/" style="font-size: 18px; padding: 12px 24px; background: var(--accent); color: var(--text); border: none; border-radius: 6px; text-decoration: none; border-bottom: none; display: inline-block;">Retour à l'accueil</a>
+      </div>
+    {% else %}
+      <h2>⚔️ Duel — Question {{ index }} / {{ total }}</h2>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: {{ progress }}%"></div>
+      </div>
+      
+      <div class="timer-display">
+        <div class="timer-circle">
+          <svg viewBox="0 0 100 100" style="width: 100px; height: 100px;">
+            <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(108, 122, 137, 0.2)" stroke-width="3"/>
+            <circle cx="50" cy="50" r="45" fill="none" stroke="var(--accent)" stroke-width="3" class="timer-fill" style="stroke-dasharray: 282.7; stroke-dashoffset: 0; transform: rotate(-90deg); transform-origin: 50px 50px;"/>
+          </svg>
+          <div class="timer-text"><span id="duel-timer-seconds">15</span>s</div>
+        </div>
+      </div>
+      
+      <div style="text-align: center; margin: 20px 0; padding: 16px; background: rgba(108, 122, 137, 0.15); border-radius: 6px;">
+        <p style="margin: 0; color: var(--muted); font-size: 14px;">Tour actuel</p>
+        <p style="margin: 8px 0 0 0; font-size: 20px; color: var(--accent); font-weight: 600;">{{ current_player }}</p>
+      </div>
+
+      <p class="question">{{ question.text }}</p>
+      
+      <form method="post" id="duel-form">
+        {% csrf_token %}
+        <div class="choices">
+          {% for key, label in question.choices %}
+            <label class="choice-item">
+              <input type="radio" name="choice" value="{{ key }}" required>
+              <span>{{ label }}</span>
+            </label>
+          {% endfor %}
+        </div>
+        <button type="submit" id="duel-submit-btn">Valider la réponse</button>
+      </form>
+      
+      <div class="scores">
+        <div class="score-item">
+          <p style="font-size: 14px; margin: 0;">{{ players.p1 }}</p>
+          <strong>{{ scores.p1 }}/{{ total }}</strong>
+        </div>
+        <div class="score-item">
+          <p style="font-size: 14px; margin: 0;">{{ players.p2 }}</p>
+          <strong>{{ scores.p2 }}/{{ total }}</strong>
+        </div>
+      </div>
+    {% endif %}
+  </section>
+
+  <script>
+    if (document.getElementById('duel-timer-seconds')) {
+      (function() {
+        const TIMER_DURATION = 15;
+        let remainingTime = TIMER_DURATION;
+        const timerDisplay = document.getElementById('duel-timer-seconds');
+        const timerFill = document.querySelector('.timer-fill');
+        const submitBtn = document.getElementById('duel-submit-btn');
+        const duelForm = document.getElementById('duel-form');
+        const circumference = 282.7;
+
+        const updateTimer = () => {
+          timerDisplay.textContent = remainingTime;
+          const progress = (TIMER_DURATION - remainingTime) / TIMER_DURATION;
+          timerFill.style.strokeDashoffset = circumference * (1 - progress);
+
+          if (remainingTime <= 5) {
+            timerDisplay.parentElement.style.color = '#ff6666';
+          }
+
+          if (remainingTime <= 0) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Temps écoulé...';
+            setTimeout(() => duelForm.submit(), 500);
+          } else {
+            remainingTime--;
+          }
+        };
+
+        updateTimer();
+        setInterval(updateTimer, 1000);
+      })();
+    }
+  </script>
+{% endblock %}

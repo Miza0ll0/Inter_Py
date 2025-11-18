@@ -1,0 +1,106 @@
+{% extends 'quiz/base.html' %}
+
+{% block content %}
+  <section class="panel">
+    {% if finished %}
+      <h2>🎉 Round terminé!</h2>
+      <div class="result">
+        <p>Score final</p>
+        <div class="percentage">{{ result.score }}/{{ result.total }}</div>
+        <p>{{ result.percentage }}% de réussite</p>
+      </div>
+      <div style="text-align: center;">
+        <a href="/" style="font-size: 18px; padding: 12px 24px; background: var(--accent); color: var(--text); border: none; border-radius: 6px; text-decoration: none; border-bottom: none; display: inline-block;">Retour à l'accueil</a>
+      </div>
+    {% elif feedback %}
+      <h2>Question {{ index }} / {{ total }}</h2>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: {{ progress }}%"></div>
+      </div>
+      <p class="question">{{ question.text }}</p>
+      
+      <div class="feedback {% if feedback.is_correct %}correct{% else %}incorrect{% endif %}">
+        <div class="feedback-label">
+          {% if feedback.is_correct %}✓ Bonne réponse!{% else %}✗ Mauvaise réponse{% endif %}
+        </div>
+        <div class="correct-answer">
+          <strong>Réponse correcte:</strong> {{ feedback.correct_label }}
+        </div>
+        {% if feedback.explanation %}
+          <div class="explanation">
+            <strong>Explication:</strong> {{ feedback.explanation }}
+          </div>
+        {% endif %}
+      </div>
+      
+      <form method="post" action="{% url 'quiz:quiz_round_next' %}">
+        {% csrf_token %}
+        <button type="submit">Question suivante →</button>
+      </form>
+    {% else %}
+      <h2>Question {{ index }} / {{ total }}</h2>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: {{ progress }}%"></div>
+      </div>
+      
+      <div class="timer-display">
+        <div class="timer-circle">
+          <svg viewBox="0 0 100 100" style="width: 100px; height: 100px;">
+            <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(108, 122, 137, 0.2)" stroke-width="3"/>
+            <circle cx="50" cy="50" r="45" fill="none" stroke="var(--accent)" stroke-width="3" class="timer-fill" style="stroke-dasharray: 282.7; stroke-dashoffset: 0; transform: rotate(-90deg); transform-origin: 50px 50px;"/>
+          </svg>
+          <div class="timer-text"><span id="timer-seconds">15</span>s</div>
+        </div>
+      </div>
+
+      <form method="post" id="quiz-form">
+        {% csrf_token %}
+        <p class="question">{{ question.text }}</p>
+        <div class="choices">
+          {% for key, label in question.choices %}
+            <label class="choice-item">
+              <input type="radio" name="choice" value="{{ key }}" required>
+              <span>{{ label }}</span>
+            </label>
+          {% endfor %}
+        </div>
+        <button type="submit" id="submit-btn">Valider la réponse</button>
+      </form>
+    {% endif %}
+  </section>
+
+  <script>
+    if (document.getElementById('timer-seconds')) {
+      (function() {
+        const TIMER_DURATION = 15;
+        let remainingTime = TIMER_DURATION;
+        const timerDisplay = document.getElementById('timer-seconds');
+        const timerFill = document.querySelector('.timer-fill');
+        const submitBtn = document.getElementById('submit-btn');
+        const quizForm = document.getElementById('quiz-form');
+        const circumference = 282.7;
+
+        const updateTimer = () => {
+          timerDisplay.textContent = remainingTime;
+          const progress = (TIMER_DURATION - remainingTime) / TIMER_DURATION;
+          timerFill.style.strokeDashoffset = circumference * (1 - progress);
+
+          if (remainingTime <= 5) {
+            timerDisplay.parentElement.style.color = '#ff6666';
+          }
+
+          if (remainingTime <= 0) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Temps écoulé...';
+            setTimeout(() => quizForm.submit(), 500);
+          } else {
+            remainingTime--;
+          }
+        };
+
+        updateTimer();
+        setInterval(updateTimer, 1000);
+      })();
+    }
+  </script>
+{% endblock %}

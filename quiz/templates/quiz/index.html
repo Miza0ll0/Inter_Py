@@ -1,0 +1,66 @@
+{% extends 'quiz/base.html' %}
+
+{% block content %}
+  <div style="max-width: 900px; margin: 40px auto; padding: 0 16px;">
+    {% if error %}
+      <div class="error" style="margin-bottom: 24px; padding: 16px;">{{ error }}</div>
+    {% endif %}
+
+    <!-- Solo Mode Card -->
+    <section class="panel" style="margin-bottom: 32px;">
+      <h2>🎯 Mode Solo</h2>
+      <p style="color: var(--muted); margin-bottom: 24px; line-height: 1.6;">Testez vos connaissances avec 10 questions aléatoires. Obtenez des explications pour chaque réponse.</p>
+      
+      <form method="post" action="{% url 'quiz:start_round' %}">
+        {% csrf_token %}
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; margin-bottom: 10px; font-weight: 600; font-size: 14px;">Choisir un thème (optionnel)</label>
+          <select name="theme">
+            <option value="">📚 Tous les thèmes</option>
+            {% for t in themes %}
+              <option value="{{ t }}">{{ t }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button type="submit" style="width: 100%; max-width: 100%;">Démarrer le quiz solo 🚀</button>
+      </form>
+    </section>
+
+    <!-- Duel Mode Card -->
+    <section class="panel">
+      <h2>⚔️ Mode Duel</h2>
+      <p style="color: var(--muted); margin-bottom: 24px; line-height: 1.6;">Affrontez un adversaire dans un quiz compétitif avec timer. Le meilleur gagne!</p>
+      
+      <form method="post" action="{% url 'quiz:start_duel' %}">
+        {% csrf_token %}
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px;">
+          <div>
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px;">Joueur 1</label>
+            <input type="text" name="player1" placeholder="Votre nom" value="Joueur 1">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px;">Joueur 2</label>
+            <input type="text" name="player2" placeholder="Adversaire" value="Joueur 2">
+          </div>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; margin-bottom: 10px; font-weight: 600; font-size: 14px;">Thème (optionnel)</label>
+          <select name="theme">
+            <option value="">📚 Tous les thèmes</option>
+            {% for t in themes %}
+              <option value="{{ t }}">{{ t }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button type="submit" style="width: 100%; max-width: 100%;">Démarrer le duel ⚔️</button>
+      </form>
+    </section>
+
+    <div style="text-align: center; margin-top: 48px; color: var(--muted); font-size: 13px; line-height: 1.8;">
+      <p style="margin: 8px 0;">⏱️ 15 secondes par question</p>
+      <p style="margin: 8px 0;">💡 10 questions aléatoires par round</p>
+      <p style="margin: 8px 0;">📚 7 thèmes différents disponibles</p>
+    </div>
+  </div>
+{% endblock %}
