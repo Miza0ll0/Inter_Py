@@ -1,17 +1,22 @@
 import os
 from pathlib import Path
+import dj_database_url
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# ----------------------------
+# Paths
+# ----------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'dev-placeholder-secret-key'
+# ----------------------------
+# Security
+# ----------------------------
+SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-placeholder-secret-key')
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
-# For development only
-DEBUG = True
-
-ALLOWED_HOSTS = []
-
+# ----------------------------
+# Applications
+# ----------------------------
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -22,8 +27,12 @@ INSTALLED_APPS = [
     'quiz',
 ]
 
+# ----------------------------
+# Middleware
+# ----------------------------
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # pour servir les fichiers statiques
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -32,8 +41,15 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# ----------------------------
+# URLs & WSGI
+# ----------------------------
 ROOT_URLCONF = 'quizsite.urls'
+WSGI_APPLICATION = 'quizsite.wsgi.application'
 
+# ----------------------------
+# Templates
+# ----------------------------
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -50,22 +66,46 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'quizsite.wsgi.application'
-
+# ----------------------------
+# Database
+# ----------------------------
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    "default": dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=600,
+    )
 }
 
-AUTH_PASSWORD_VALIDATORS = []
+# ----------------------------
+# Password validation
+# ----------------------------
+AUTH_PASSWORD_VALIDATORS = [
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+]
 
+# ----------------------------
+# Internationalization
+# ----------------------------
 LANGUAGE_CODE = 'fr-fr'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
+# ----------------------------
+# Static files
+# ----------------------------
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'quiz' / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # pour collectstatic
+STATICFILES_DIRS = [BASE_DIR / 'quiz' / 'static']  # dossiers source
+
+# Whitenoise
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# ----------------------------
+# Default primary key
+# ----------------------------
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
